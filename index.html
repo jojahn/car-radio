@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radio</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+
+<script src="https://cdn.jsdelivr.net/npm/video.js@8.23.3/dist/video.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@100..900&family=Manrope:wght@200..800&display=swap"
+    rel="stylesheet">
+
+<style>
+    :root {
+        --lcd-text-color: rgb(20, 20, 10);
+        --lcd-text-color-active: rgba(255, 200, 100);
+    }
+
+    body {
+        background-color: black;
+        user-select: none;
+        height: 100vh;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+    }
+
+    .default-font {
+        font-family: "Manrope", sans-serif;
+        font-optical-sizing: auto;
+        font-weight: 1000;
+        font-style: normal;
+    }
+
+    .lcd-font {
+        font-family: "Doto", sans-serif;
+        font-optical-sizing: auto;
+        font-weight: normal;
+        font-style: normal;
+        font-variation-settings: "ROND" 0;
+    }
+
+    .radio {
+        margin: auto;
+        background-color: #222;
+        background-color: transparent;
+        width: min-content;
+        height: min-content;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        color: rgb(146, 146, 139);
+    }
+
+    .top-spacer {
+        background-color: #111;
+        background: linear-gradient(to bottom,
+                #222,
+                #999 3%,
+                #222 20%,
+                #222 50%,
+                #161616);
+        height: 30px;
+        width: 100%;
+        border-radius: 4px 4px 0 0;
+    }
+
+    .bottom-spacer {
+        background-color: #111;
+        background: linear-gradient(to bottom, #111, #222 60%);
+        height: 30px;
+        width: 100%;
+        border-radius: 0 0 4px 4px;
+    }
+
+    .bottom-spacer,
+    .top-spacer {
+        margin-left: 4px;
+        margin-right: 4px;
+        width: calc(100% - 8px);
+        box-sizing: border-box;
+
+    }
+
+    .elements {
+        background-color: #222;
+        background: linear-gradient(to bottom, #444 0.5%, #222 2%, #222 98%, #111 99.5%);
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-grow: 1;
+        padding: 8px;
+        box-sizing: border-box;
+        border-radius: 4px;
+    }
+
+    .center {
+        height: 100%;
+        padding: 16px;
+    }
+
+    .center {
+        flex-grow: 1;
+        width: 100%;
+        border: 2px solid black;
+        margin-top: -8px;
+        border-top: none;
+        box-shadow: inset 1px 0 0 #4444, 1px 0 0 #4444;
+        background: linear-gradient(to bottom, #22222200, #222222 10%);
+        z-index: 1;
+    }
+
+    .knob {
+        margin-top: -20px;
+        margin-left: 5px;
+        margin-right: 30px;
+        width: 100px;
+        height: 100px;
+        background-color: #111;
+        background: radial-gradient(#222 0%, #333 0%, #222 60%, #555 70%);
+        border-radius: 999em;
+        cursor: grab;
+        box-shadow: 10px 6px #222,
+            15px 10px 1px 10px #191919,
+            20px 20px 30px 5px black,
+            inset -4px -4px 10px 5px #222;
+    }
+
+    .knob.mirrored {
+        transform: scaleX(-1);
+        margin-left: 60px;
+        margin-right: -10px;
+    }
+
+    .knob:active {
+        cursor: grabbing;
+    }
+
+    .knob-label {
+        text-align: center;
+        margin-bottom: 4px;
+        margin-top: 6px;
+    }
+
+    .knob-bg {
+        display: flex;
+        align-items: center;
+        height: 78%;
+        width: calc(100% + 32px);
+        background: rgba(5, 5, 5, 0.23);
+        margin-left: -16px;
+        padding-right: 8px;
+        box-shadow: inset 0 10px 10px rgba(0, 0, 0, 0.3), 0 10px 10px rgba(255, 255, 255, 0.06);
+    }
+
+    .lcd-screen {
+        background-color: black;
+        overflow: hidden;
+        padding: 8px;
+    }
+
+    .lcd-screen * {
+        transition: 0.15s;
+        color: var(--lcd-text-color);
+        background-color: (255, 255, 255, 0.06);
+    }
+
+    .lcd-screen *[active] {
+        color: var(--lcd-text-color-active);
+        text-shadow: 0 0 10px wheat;
+    }
+
+    .lcd-screen #Frequency {
+        font-size: 6em;
+        display: flex;
+        width: 300px;
+        padding: 8px;
+    }
+
+    .buttons {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: fit-content;
+        font-size: 0.8em;
+        gap: 4px;
+    }
+
+    .button>button {
+        --offset: 4px;
+
+        background-color: #333;
+        background: linear-gradient(to bottom,
+                #444,
+                #222 20%,
+                #222 70%,
+                #262626 80%,
+                #111);
+        box-shadow: var(--offset) 0 0 1px #181818, var(--offset) 0 0 2px black, 5px 5px 10px rgba(0, 0, 0, 0.6);
+        border: none;
+        width: 50px;
+        height: 15px;
+        cursor: pointer;
+        transform: translateX(calc(var(--offset) * -1));
+        transition: 0.15s;
+    }
+
+    .button:nth-child(2)>button {
+        --offset: 3px;
+    }
+
+    .button:nth-child(3)>button {
+        --offset: 2px;
+    }
+
+    .button:nth-child(4)>button {
+        --offset: 1px;
+    }
+
+    .button>button[active] {
+        background: linear-gradient(to bottom,
+                #363636,
+                #222 20%,
+                #222 70%,
+                #262626 80%,
+                #111);
+        box-shadow: 0px 0 0 2px black;
+        transform: none;
+    }
+
+    .segments {
+        display: grid;
+        grid-template-areas: auto2;
+    }
+</style>
+</head>
+
+<body>
+    <video id="my-player" class="video-js" controls preload="auto" poster="//vjs.zencdn.net/v/oceans.png"
+        style="display: none;" data-setup='{}'>
+        <source src="//vjs.zencdn.net/v/oceans.mp4" type="video/mp4">
+        </source>
+        <source src="//vjs.zencdn.net/v/oceans.webm" type="video/webm">
+        </source>
+        <source src="//vjs.zencdn.net/v/oceans.ogv" type="video/ogg">
+        </source>
+        <p class="vjs-no-js">
+            To view this video please enable JavaScript, and consider upgrading to a
+            web browser that
+            <a href="https://videojs.com/html5-video-support/" target="_blank">
+                supports HTML5 video
+            </a>
+        </p>
+    </video>
+
+    <article class="radio default-font">
+        <section class="top-spacer"></section>
+        <section class="elements">
+            <section class="left">
+                <div class="knob-label">IO / Volume</div>
+                <div class="knob-bg">
+                    <div id="Volume" class="knob"></div>
+                </div>
+                <div>RADIO</div>
+            </section>
+            <section class="center">
+                <section class="lcd-screen">
+                    <div id="AM_LED">AM</div>
+                    <div id="FM_LED">FM</div>
+
+                    <div id="Frequency" class="lcd-font"></div>
+                </section>
+                <section class="buttons">
+                    <div class="button">
+                        <span>MTL</span>
+                        <button id="MTL_BTN"></button>
+                    </div>
+                    <div class="button">
+                        <span>LD</span>
+                        <button id="LD_BTN"></button>
+                    </div>
+                    <div class="button">
+                        <span>LOC</span>
+                        <button id="LOC_BTN"></button>
+                    </div>
+                    <div class="button">
+                        <span>AM/FM</span>
+                        <button id="AM_FM_BTN"></button>
+                    </div>
+                </section>
+            </section>
+            <section class="right">
+                <div class="knob-label">TUNE</div>
+                <div class="knob-bg">
+                    <div id="Tune" class="knob mirrored"></div>
+                </div>
+            </section>
+        </section>
+        <section class="bottom-spacer"></section>
+    </article>
+
+    <template id="Segment">
+        <svg width="100%" height="100%" viewBox="0 0 32 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+            <defs>
+                <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%">
+                    <!-- Blur the original graphic -->
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+                    <!-- Merge blurred image with the original -->
+                    <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+            </defs>
+            <svg width="100%" height="100%" viewBox="0 0 32 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+                <g transform="matrix(1,0,0,1,-2,0.1)">
+                    <g id="s0" transform="matrix(1.11765,0,0,1,-1.32353,1)">
+                        <path d="M7,3L8.789,1L22.211,1L24,3L22.211,5L8.789,5L7,3Z" style="fill:rgb(161,255,0);stroke:black;stroke-opacity:0;stroke-width:0.94px;"/>
+                    </g>
+                    <g id="s3" transform="matrix(1.11765,0,0,1,-1.32353,21.05)">
+                        <path d="M7,3L8.789,1L22.211,1L24,3L22.211,5L8.789,5L7,3Z" style="fill:rgb(161,255,0);stroke:black;stroke-opacity:0;stroke-width:0.94px;"/>
+                    </g>
+                    <g id="s6" transform="matrix(1.11765,0,0,1,-1.32353,40.8)">
+                        <path d="M7,3L8.789,1L22.211,1L24,3L22.211,5L8.789,5L7,3Z" style="fill:rgb(161,255,0);stroke:black;stroke-opacity:0;stroke-width:0.94px;"/>
+                    </g>
+                    <g id="s2" transform="matrix(6.93889e-17,-1.11765,1,5.55112e-17,23,31.3235)">
+                        <path d="M7,3L8.789,1L22.211,1L24,3L22.211,5L8.789,5L7,3Z" style="fill:rgb(161,255,0);stroke:black;stroke-opacity:0;stroke-width:0.94px;"/>
+                    </g>
+                    <g id="s1" serif:id="s1" transform="matrix(6.93889e-17,-1.11765,1,5.55112e-17,3,31.3235)">
+                        <path d="M7,3L8.789,1L22.211,1L24,3L22.211,5L8.789,5L7,3Z" style="fill:rgb(161,255,0);stroke:black;stroke-opacity:0;stroke-width:0.94px;"/>
+                    </g>
+                    <g id="s5" transform="matrix(6.93889e-17,-1.11765,1,5.55112e-17,23,51.3235)">
+                        <path d="M7,3L8.789,1L22.211,1L24,3L22.211,5L8.789,5L7,3Z" style="fill:rgb(161,255,0);stroke:black;stroke-opacity:0;stroke-width:0.94px;"/>
+                    </g>
+                    <g id="s4" transform="matrix(6.93889e-17,-1.11765,1,5.55112e-17,3,51.3235)">
+                        <path d="M7,3L8.789,1L22.211,1L24,3L22.211,5L8.789,5L7,3Z" style="fill:rgb(161,255,0);stroke:black;stroke-opacity:0;stroke-width:0.94px;"/>
+                    </g>
+                </g>
+                <g id="decimal" transform="matrix(0.75,0,0,0.882353,6.75,4.42941)">
+                    <ellipse cx="29" cy="45.3" rx="2" ry="1.7" style="fill:rgb(161,255,0);"/>
+                </g>
+            </svg>
+    </template>
+
+    <script type="module">
+        let state = false;
+
+        let grabbedKnob = undefined;
+
+        const player = function createRadioPlayer() {
+            const params = new URLSearchParams(location.search);
+            const defaultSrc = params.get("stream") || params.get("s");
+            var player = videojs('my-player', {
+                html5: {
+                    hls: {
+                        overrideNative: true
+                    }
+                }
+            }, function onPlayerReady() {
+                videojs.log('Your player is ready!');
+            });
+            let src = defaultSrc;
+            try {
+              // https://chi-live2-ais-relay1.leanstream.co/goldenwest/CKXYFM.stream/playlist.m3u8
+              const urlSrc = new URL(decodeURIComponent(window.location.hash.slice(1)));
+              src = urlSrc?.href ?? defaultSrc;
+            } catch { /* empty */ }
+            player.src({
+                src: src,
+                type: 'application/x-mpegURL'
+            });
+            window.player = player;
+            return player;
+        }();
+
+        function setAttrState(element, value) {
+            if (value) {
+                element.setAttribute("active", "");
+            } else {
+                element.removeAttribute("active");
+            }
+        }
+
+        const updateFrequency = function createFrequencyState() {
+            var frequency = 100;
+            const MAX_FREQ = 108;
+            const MIN_FREQ = 88;
+
+            let step = 0.1;
+            const frequencyElement = document.getElementById("Frequency");
+            const template = document.querySelector("#Segment");
+
+            frequencyElement.appendChild(document.importNode(template.content, true));
+            const nr1 = frequencyElement.lastElementChild;
+
+            frequencyElement.appendChild(document.importNode(template.content, true));
+            const nr2 = frequencyElement.lastElementChild;
+
+            frequencyElement.appendChild(document.importNode(template.content, true));
+            const nr3 = frequencyElement.lastElementChild;
+
+            frequencyElement.appendChild(document.importNode(template.content, true));
+            const nr4 = frequencyElement.lastElementChild;
+
+            frequencyElement.appendChild(document.importNode(template.content, true));
+            const nrDecimal1 = frequencyElement.lastElementChild;
+
+            frequencyElement.appendChild(document.importNode(template.content, true));
+            const nrDecimal2 = frequencyElement.lastElementChild;
+
+            const setSinglePart = (element, value, showDecimalPoint = false) => {
+              let segments = [false, false, false, false, false, false, false];
+              switch(value) {
+                case 9: {
+                  segments = [
+                       1,
+                    1,   1,
+                       1,
+                    0,   1,
+                       1
+                  ];
+                  break;
+                }
+                case 8: {
+                  segments = [
+                       1,
+                    1,   1,
+                       1,
+                    1,   1,
+                       1
+                  ];
+                  break;
+                }
+                case 7: {
+                  segments = [
+                       1,
+                    0,   1,
+                       0,
+                    0,   1,
+                       0
+                  ];
+                  break;
+                }
+                case 6: {
+                  segments = [
+                       1,
+                    1,   0,
+                       1,
+                    1,   1,
+                       1
+                  ];
+                  break;
+                }
+                case 5: {
+                  segments = [
+                       1,
+                    1,   0,
+                       1,
+                    0,   1,
+                       1
+                  ];
+                  break;
+                }
+                case 4: {
+                  segments = [
+                       0,
+                    1,   1,
+                       1,
+                    0,   1,
+                       0
+                  ];
+                  break;
+                }
+                case 3: {
+                  segments = [
+                       1,
+                    0,   1,
+                       1,
+                    0,   1,
+                       1
+                  ];
+                  break;
+                }
+                case 2: {
+                  segments = [
+                       1,
+                    0,   1,
+                       1,
+                    1,   0,
+                       1
+                  ];
+                  break;
+                }
+                case 1: {
+                  segments = [
+                       0,
+                    0,   1,
+                       0,
+                    0,   1,
+                       0
+                  ];
+                  break;
+                }
+                case 0: {
+                  segments = [
+                       1,
+                    1,   1,
+                       0,
+                    1,   1,
+                       1
+                  ];
+                  break;
+                }
+              }
+
+              const decimal = element.querySelector("#decimal ellipse");
+              if (showDecimalPoint) {
+                decimal.style.filter = "url(#bloom)";
+                decimal.style.fill = "var(--lcd-text-color-active)";
+              } else {
+                decimal.style.filter = "";
+                decimal.style.fill = "var(--lcd-text-color)";
+              }
+
+              segments.forEach((active, idx) => {
+                const segment = element.querySelector("#s" + idx.toString() + " path");
+                if (active) {
+                  segment.style.filter = "url(#bloom)";
+                  segment.style.fill = "var(--lcd-text-color-active)";
+                } else {
+                  segment.style.filter = "";
+                  segment.style.fill = "var(--lcd-text-color)";
+                }
+              })
+            }
+
+            setSinglePart(nr1, null);
+            setSinglePart(nr2, null);
+            setSinglePart(nr3, null);
+            setSinglePart(nr4, null);
+            setSinglePart(nrDecimal1, null);
+            setSinglePart(nrDecimal2, null);
+
+            const tuneKnob = document.getElementById("Tune");
+            function setFrequency(value) {
+                if (value > MIN_FREQ && value < MAX_FREQ) {
+                    frequency = value;
+                } else if (Math.abs(MIN_FREQ - value) < step) {
+                    frequency = MIN_FREQ;
+                } else if (Math.abs(MAX_FREQ - value) < step) {
+                    frequency = MAX_FREQ;
+                }
+
+                if (!state) {
+                  setSinglePart(nr1, null);
+                  setSinglePart(nr2, null);
+                  setSinglePart(nr3, null);
+                  setSinglePart(nr4, null);
+                  setSinglePart(nrDecimal1, null);
+                  setSinglePart(nrDecimal2, null);
+                  return;
+                }
+
+                const parts = frequency.toFixed(2).replace(".", "").split("").reverse().map(Number);
+                setSinglePart(nr1, parts[5]);
+                setSinglePart(nr2, parts[4]);
+                setSinglePart(nr3, parts[3]);
+                setSinglePart(nr4, parts[2], true);
+                setSinglePart(nrDecimal2, parts[1]);
+                setSinglePart(nrDecimal1, parts[0]);
+
+                if (!state) {
+                    frequencyElement.removeAttribute("active");
+                } else {
+                    frequencyElement.setAttribute("active", "");
+                }
+            }
+            /*
+            tuneKnob.addEventListener("click", () => {
+                if (state) {
+                    setFrequency(frequency + step);
+                }
+            });
+            */
+
+            function setup() {
+              const reset = () => {
+                x = undefined;
+                y = undefined;
+                totalDist = 0;
+                time = undefined;
+                speed = 0;
+                step = 0.1;
+              }
+              return { reset }
+            }
+
+            tuneKnob.addEventListener("touchstart", (e) => {
+
+            });
+
+            tuneKnob.addEventListener("mousedown", (e) => {
+                grabbedKnob = tuneKnob;
+                document.body.style.cursor = "grabbing";
+
+                const rect = tuneKnob.getBoundingClientRect();
+                const centerX = rect.left + (rect.width / 2);
+                const centerY = rect.top + (rect.height / 2);
+                let VALUE_FILP_DIST_PX = 20;
+                const STEP_FLIP_PX_PER_MS = 0.4;
+
+                let x = undefined;
+                let y = undefined;
+
+                let totalDist = 0;
+                let time = undefined;
+                let speed = 0;
+                const onMouseMove = (e) => {
+                    const adjX = e.x - centerX;
+                    const adjY = e.y - centerY;
+                    if (!x) x = adjX;
+                    if (!y) y = adjY;
+                    const al = Math.atan2(y, x) + Math.PI;
+                    const be = Math.atan2(adjY, adjX) + Math.PI;
+
+                    const dist = Math.sqrt(Math.pow(adjX - x, 2) + Math.pow(adjY - y, 2));
+                    const delta = time ? performance.now() - time : 0;
+                    time = performance.now();
+                    speed = dist / delta;
+                    totalDist += dist;
+                    if (speed < STEP_FLIP_PX_PER_MS) {
+                        step = 0.1;
+                    } else {
+                        step = 0.25;
+                    }
+
+                    x = adjX;
+                    y = adjY;
+                    // console.log("move", dist, delta.toFixed(5), speed.toFixed(5));
+                    if (totalDist > VALUE_FILP_DIST_PX) {
+                        totalDist = 0;
+                        if (state) {
+                            setFrequency(frequency + step * (al < be ? 1 : -1));
+                        }
+                    }
+                }
+                const onMouseUp = () => {
+                    document.body.style.cursor = "";
+                    x = undefined;
+                    y = undefined;
+                    totalDist = 0;
+                    time = undefined;
+                    speed = 0;
+                    step = 0.1;
+                    window.removeEventListener("mouseup", onMouseUp);
+                    window.removeEventListener("mousemove", onMouseMove);
+                }
+                window.addEventListener("mouseup", onMouseUp);
+                window.addEventListener("mousemove", onMouseMove);
+            });
+            return () => {
+                setFrequency(frequency);
+            }
+        }();
+
+        const updateAMFM = function createAMFMState() {
+            var amFM = false;
+            const amFMButton = document.getElementById("AM_FM_BTN");
+            const amLED = document.getElementById("AM_LED");
+            const fmLED = document.getElementById("FM_LED");
+            function setAMFM(value) {
+                amFM = value;
+                if (!value) {
+                    setAttrState(amFMButton, false);
+                    setAttrState(amLED, false);
+                    setAttrState(fmLED, state);
+                } else {
+                    setAttrState(amFMButton, true);
+                    setAttrState(fmLED, false);
+                    setAttrState(amLED, state);
+                }
+            }
+            amFMButton.addEventListener("click", () => {
+                setAMFM(!amFM);
+            });
+            return () => {
+                setAMFM(amFM);
+            }
+        }();
+
+        const volumneKnob = document.getElementById("Volume");
+        function setState(value) {
+            state = value;
+        }
+        volumneKnob.addEventListener("click", () => {
+
+        });
+        setState(true);
+
+        let volumeLevel = 1.0;
+        function setVolumeLevel(value) {
+            if (value > 0 && value <= 1.0) {
+                volumeLevel = value;
+                player.volume(volumeLevel);
+            }
+        }
+        volumneKnob.addEventListener("mousedown", (e) => {
+            const mouseDownStart = performance.now();
+            grabbedKnob = volumneKnob;
+            document.body.style.cursor = "grabbing";
+
+            const rect = volumneKnob.getBoundingClientRect();
+            const centerX = rect.left + (rect.width / 2);
+            const centerY = rect.top + (rect.height / 2);
+            let VALUE_FILP_DIST_PX = 20;
+            const STEP_FLIP_PX_PER_MS = 0.4;
+            const DEFAULT_STEP = .05;
+            let step = DEFAULT_STEP;
+
+            let x = undefined;
+            let y = undefined;
+
+            let totalDist = 0;
+            let accDist = 0;
+            let time = undefined;
+            let speed = 0;
+            const onMouseMove = (e) => {
+                const adjX = e.x - centerX;
+                const adjY = e.y - centerY;
+                if (!x) x = adjX;
+                if (!y) y = adjY;
+                const al = Math.atan2(y, x) + Math.PI;
+                const be = Math.atan2(adjY, adjX) + Math.PI;
+
+                const dist = Math.sqrt(Math.pow(adjX - x, 2) + Math.pow(adjY - y, 2));
+                const delta = time ? performance.now() - time : 0;
+                time = performance.now();
+                speed = dist / delta;
+                accDist += dist;
+                totalDist += dist;
+                if (speed < STEP_FLIP_PX_PER_MS) {
+                    step = DEFAULT_STEP;
+                } else {
+                    step = DEFAULT_STEP;
+                }
+
+                x = adjX;
+                y = adjY;
+                console.log("move", dist, delta.toFixed(5), speed.toFixed(5));
+                if (accDist > VALUE_FILP_DIST_PX) {
+                    accDist = 0;
+                    if (state) {
+                        setVolumeLevel(volumeLevel + step * (al < be ? 1 : -1));
+                    }
+                }
+            }
+
+            const CLICK_DETECTION_TOTAL_DIST = 10;
+            const onMouseUp = () => {
+                if (totalDist < CLICK_DETECTION_TOTAL_DIST) {
+                    setState(!state);
+                    updateAMFM();
+                    updateFrequency();
+                    if (state) {
+                        player.play();
+                    } else {
+                        player.pause();
+                    }
+                }
+                document.body.style.cursor = "";
+                x = undefined;
+                y = undefined;
+                totalDist = 0;
+                accDist = 0;
+                time = undefined;
+                speed = 0;
+                step = DEFAULT_STEP;
+                window.removeEventListener("mouseup", onMouseUp);
+                window.removeEventListener("mousemove", onMouseMove);
+            }
+            window.addEventListener("mouseup", onMouseUp);
+            window.addEventListener("mousemove", onMouseMove);
+        });
+    </script>
+</body>
+
+</html>
